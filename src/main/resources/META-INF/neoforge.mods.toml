@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "robloxphysics"
+version = "1.0.0"
+displayName = "Roblox Physics"
+description = '''
+Ports Roblox's character physics (gravity, WalkSpeed, JumpHeight, instant air control,
+no sprint, no jump cooldown, no fall damage) to Minecraft. Install on client AND server.
+'''
+
+[[dependencies.robloxphysics]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.robloxphysics]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.22)"
+ordering = "NONE"
+side = "BOTH"
