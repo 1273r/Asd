@@ -4,12 +4,16 @@ license = "MIT"
 
 [[mods]]
 modId = "robloxphysics"
-version = "1.0.0"
+version = "2.0.0"
 displayName = "Roblox Physics"
 description = '''
-Ports Roblox's character physics (gravity, WalkSpeed, JumpHeight, instant air control,
-no sprint, no jump cooldown, no fall damage) to Minecraft. Install on client AND server.
+Makes Minecraft feel like Roblox: Roblox character physics (gravity, WalkSpeed, JumpHeight, instant air
+control, no sprint, no jump cooldown, no fall damage), the Roblox third-person camera on F5, live Lua/Luau
+scripting with a Roblox-style API, and the F9 Developer Console. Install on client AND server.
 '''
+
+[[mixins]]
+config = "robloxphysics.mixins.json"
 
 [[dependencies.robloxphysics]]
 modId = "neoforge"

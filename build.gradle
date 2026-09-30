@@ -14,6 +14,25 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 repositories {
     mavenLocal()
+    mavenCentral()
+}
+
+configurations {
+    // Libraries whose classes are copied into our jar (LuaJ is a plain, non-modular jar)
+    shade
+    implementation.extendsFrom shade
+}
+
+dependencies {
+    shade 'org.luaj:luaj-jse:3.0.1'
+}
+
+jar {
+    from({ configurations.shade.collect { zipTree(it) } }) {
+        // default-package CLI classes are illegal inside a module; javax.script/luajc/bcel bits are unused
+        exclude '*.class', 'META-INF/**', 'org/luaj/vm2/script/**', 'org/luaj/vm2/luajc/**',
+                'org/luaj/vm2/server/**', 'org/luaj/vm2/ast/**', 'org/luaj/vm2/parser/**'
+    }
 }
 
 neoForge {
@@ -24,6 +43,10 @@ neoForge {
     runs {
         client {
             client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        gameTestServer {
+            type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
         server {

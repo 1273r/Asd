@@ -1,11 +1,11 @@
 package com.example.robloxphysics;
 
+import com.example.robloxphysics.dm.HumanoidSettings;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -56,16 +56,18 @@ public class ClientPhysics {
         if (!Config.ENABLED.get()) return;
         if (!(event.getEntity() instanceof LocalPlayer p) || !canControl(p)) return;
 
+        // per-player Humanoid values (replicated from the server / set by LocalScripts; default = config)
+        final HumanoidSettings hum = HumanoidSettings.LOCAL;
         final double stud = Config.STUD_SIZE.get();
         final double speedUnit = stud / 20.0;    // studs/s   -> blocks/tick
         final double accelUnit = stud / 400.0;   // studs/s^2 -> blocks/tick^2
-        final double G = Config.GRAVITY.get() * accelUnit;
+        final double G = hum.gravity * accelUnit;
 
         // ---- Jump: v0 = sqrt(2 g h) (or JumpPower). Vanilla moves with the velocity set on
         // the jump tick, so we hand it the midpoint velocity v0 - G/2.
-        double jumpStuds = Config.USE_JUMP_POWER.get()
-                ? Config.JUMP_POWER.get()
-                : Math.sqrt(2.0 * Config.GRAVITY.get() * Config.JUMP_HEIGHT.get());
+        double jumpStuds = hum.useJumpPower
+                ? hum.jumpPower
+                : Math.sqrt(2.0 * hum.gravity * hum.jumpHeight);
         AttributeInstance jumpAttr = p.getAttribute(Attributes.JUMP_STRENGTH);
         if (jumpAttr != null) {
             jumpAttr.setBaseValue(Math.max(0.0, jumpStuds * speedUnit - G / 2.0));
@@ -75,6 +77,12 @@ public class ClientPhysics {
         }
         if (Config.DISABLE_SPRINT.get()) {
             p.setSprinting(false);
+        }
+
+        // Humanoid.Jump = true from a script
+        if (hum.jumpRequest) {
+            hum.jumpRequest = false;
+            if (p.onGround()) event.getInput().jumping = true;
         }
 
         // ---- Horizontal
@@ -96,7 +104,7 @@ public class ClientPhysics {
             double nx = left / len, nz = fwd / len;
             double yaw = Math.toRadians(p.getYRot());
             double sin = Math.sin(yaw), cos = Math.cos(yaw);
-            double walk = Config.WALK_SPEED.get() * speedUnit * mag;
+            double walk = hum.walkSpeed * speedUnit * mag;
             tx = (nx * cos - nz * sin) * walk; // same rotation as vanilla moveRelative
             tz = (nz * cos + nx * sin) * walk;
         }
@@ -133,7 +141,7 @@ public class ClientPhysics {
         active = false;
 
         final double stud = Config.STUD_SIZE.get();
-        final double G = Config.GRAVITY.get() * stud / 400.0;
+        final double G = HumanoidSettings.LOCAL.gravity * stud / 400.0;
 
         Vec3 d = p.getDeltaMovement();
 
