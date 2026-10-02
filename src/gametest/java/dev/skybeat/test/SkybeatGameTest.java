@@ -14,6 +14,7 @@ public class SkybeatGameTest implements FabricClientGameTest {
 			Skybeat.LOGGER.info("[test] world created");
 			world.getClientWorld().waitForChunksRender();
 			Skybeat.LOGGER.info("[test] chunks rendered");
+			world.getServer().runCommand("gamemode spectator @a");
 			world.getServer().runCommand("time set noon");
 			world.getServer().runCommand("tp @a 0 90 0 0 -12");
 			world.getClientWorld().waitForChunksRender();

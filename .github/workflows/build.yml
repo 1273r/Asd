@@ -52,7 +52,7 @@ jobs:
       - name: Screenshots
         if: always()
         run: |
-          for f in $(find . -name 'skybeat_*.png' | sort); do
+          for f in $(find / -name '*skybeat_*.png' -not -path '/proc/*' 2>/dev/null | sort); do
             convert "$f" -resize 960x -quality 72 /tmp/shot.jpg
             echo "SHOT_BEGIN $(basename $f)"; base64 -w0 /tmp/shot.jpg; echo; echo "SHOT_END"
           done
@@ -60,4 +60,4 @@ jobs:
         if: always()
         with:
           name: screenshots
-          path: '**/screenshots/*.png'
+          path: '**/*skybeat_*.png'
