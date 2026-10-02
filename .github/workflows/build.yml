@@ -52,8 +52,9 @@ jobs:
       - name: Screenshots
         if: always()
         run: |
+          pip install -q pillow
           for f in $(find / -name '*skybeat_*.png' -not -path '/proc/*' 2>/dev/null | sort); do
-            convert "$f" -resize 960x -quality 72 /tmp/shot.jpg
+            python3 -c "import sys; from PIL import Image; im=Image.open(sys.argv[1]).convert('RGB'); im.thumbnail((960,960)); im.save('/tmp/shot.jpg', quality=72)" "$f"
             echo "SHOT_BEGIN $(basename $f)"; base64 -w0 /tmp/shot.jpg; echo; echo "SHOT_END"
           done
       - uses: actions/upload-artifact@v4
