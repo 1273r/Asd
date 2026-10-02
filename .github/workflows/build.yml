@@ -23,9 +23,11 @@ jobs:
       - name: Probe sources
         run: |
           ./gradlew genSources --stacktrace
-          JAR=$(find ~/.gradle .gradle -name 'minecraft-*sources.jar' 2>/dev/null | grep -i -v intermediary | head -1)
+          JAR=$(find ~/.gradle $PWD/.gradle -name 'minecraft-*sources.jar' 2>/dev/null | grep -i -v intermediary | head -1)
           echo "JAR=$JAR"; find ~/.gradle .gradle -name 'minecraft-*sources.jar' 2>/dev/null
           mkdir -p /tmp/src && cd /tmp/src && unzip -q -o "$JAR"
+          echo "=============== blaze3d jars"; find ~/.gradle $GITHUB_WORKSPACE/.gradle -iname '*blaze3d*.jar' | head; ls com/mojang/blaze3d/pipeline 2>&1 | head
+          B=$(find ~/.gradle -iname '*blaze3d*.jar' | grep -v sources | head -1); if [ -n "$B" ]; then unzip -q -o "$B" -d /tmp/b3d; for c in pipeline/RenderPipeline pipeline/RenderPipeline\$Builder pipeline/BlendFunction platform/DepthTestFunction platform/BlendFunction; do [ -f /tmp/b3d/com/mojang/blaze3d/$c.class ] && javap -p -cp /tmp/b3d "com.mojang.blaze3d.${c//\//.}"; done; fi
           for f in $(find . -name RenderType.java -o -name RenderTypes.java -o -name RenderSetup.java -o -name RenderPipeline.java -o -name BlendFunction.java -o -name DepthTestFunction.java -o -name JOrbisAudioStream.java -o -name AudioStream.java -o -name FiniteAudioStream.java -o -name KeyMapping.java -o -name VertexConsumer.java -o -name Sound.java -o -name LayeringTransform.java -o -name OutputTarget.java); do echo "=============== $f"; cat "$f"; done
           echo "=============== RenderPipelines (head)"; F=$(find . -name RenderPipelines.java); grep -n "SNIPPET =\|LIGHTNING\|DEBUG_QUADS\|POSITION_COLOR\b\|static final RenderPipeline\b" "$F" | head -60
           grep -n -A12 "LIGHTNING = \|DEBUG_QUADS = \|MATRICES_PROJECTION_SNIPPET = " "$F"
