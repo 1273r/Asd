@@ -16,6 +16,9 @@ public class SkybeatGameTest implements FabricClientGameTest {
 			Skybeat.LOGGER.info("[test] chunks rendered");
 			world.getServer().runCommand("gamemode spectator @a");
 			world.getServer().runCommand("time set noon");
+			// A pillar and a floor close by: both must hide the visualizer behind them.
+			world.getServer().runCommand("fill -3 80 12 3 96 13 minecraft:stone");
+			world.getServer().runCommand("fill -40 84 -40 40 84 40 minecraft:grass_block");
 			world.getServer().runCommand("tp @a 0 90 0 0 -12");
 			world.getClientWorld().waitForChunksRender();
 			context.takeScreenshot("skybeat_0_before");
