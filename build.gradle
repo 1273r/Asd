@@ -63,7 +63,7 @@ tasks.register('gametestJar', Jar) {
 
 tasks.register('remapGametestJar', net.fabricmc.loom.task.RemapJarTask) {
 	dependsOn gametestJar
-	input = gametestJar.flatMap { it.archiveFile }
+	input = tasks.named("gametestJar").flatMap { it.archiveFile }
 	destinationDirectory = layout.buildDirectory.dir('gametest-libs')
 	archiveClassifier = 'gametest'
 	addNestedDependencies = false
@@ -84,7 +84,7 @@ tasks.register('runProductionClientGametest', net.fabricmc.loom.task.prod.Client
 	dependsOn remapJar, remapGametestJar
 	mods.from(configurations.productionMods)
 	mods.from(remapJar.archiveFile)
-	mods.from(remapGametestJar.flatMap { it.archiveFile })
+	mods.from(tasks.named("remapGametestJar").flatMap { it.archiveFile })
 	jvmArgs.add('-Dfabric.client.gametest')
 	jvmArgs.add('-Dfabric.client.gametest.disableNetworkSynchronizer=true')
 }
