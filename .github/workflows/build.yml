@@ -35,7 +35,20 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew runProductionClientGametest --stacktrace
+      - name: Run client game test
+        run: |
+          ./gradlew runProductionClientGametest --stacktrace &
+          GP=$!
+          for i in $(seq 1 120); do
+            sleep 5
+            kill -0 $GP 2>/dev/null || break
+          done
+          if kill -0 $GP 2>/dev/null; then
+            echo "Game test timed out; thread dumps:"
+            for p in $(jps -l | grep -v -i -E 'gradle|jps' | awk '{print $1}'); do echo "=== $p"; jps -l | grep "^$p"; jstack $p | head -400; done
+            kill $GP; exit 1
+          fi
+          wait $GP
       - name: Screenshots
         if: always()
         run: |
