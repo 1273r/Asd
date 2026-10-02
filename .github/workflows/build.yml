@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Versions
+        run: |
+          curl -s https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml | grep -o '<version>[^<]*1.21.11</version>' | tail -5
+          curl -s https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml | grep -o '<version>[^<]*</version>' | tail -3
+          curl -s https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml | grep -o '<version>1.1[0-9][^<]*</version>' | tail -5
+      - name: Probe sources
+        run: |
+          ./gradlew genSources --stacktrace
+          JAR=$(find ~/.gradle .gradle -name 'minecraft-*sources.jar' 2>/dev/null | grep -i -v intermediary | head -1)
+          echo "JAR=$JAR"; find ~/.gradle .gradle -name 'minecraft-*sources.jar' 2>/dev/null
+          mkdir -p /tmp/src && cd /tmp/src && unzip -q -o "$JAR"
+          for f in $(find . -name RenderType.java -o -name RenderTypes.java -o -name RenderSetup.java -o -name RenderPipeline.java -o -name BlendFunction.java -o -name DepthTestFunction.java -o -name JOrbisAudioStream.java -o -name AudioStream.java -o -name FiniteAudioStream.java -o -name KeyMapping.java -o -name VertexConsumer.java -o -name Sound.java -o -name LayeringTransform.java -o -name OutputTarget.java); do echo "=============== $f"; cat "$f"; done
+          echo "=============== RenderPipelines (head)"; F=$(find . -name RenderPipelines.java); grep -n "SNIPPET =\|LIGHTNING\|DEBUG_QUADS\|POSITION_COLOR\b\|static final RenderPipeline\b" "$F" | head -60
+          grep -n -A12 "LIGHTNING = \|DEBUG_QUADS = \|MATRICES_PROJECTION_SNIPPET = " "$F"
+          echo "=============== RenderTypes"; F=$(find . -name RenderTypes.java); grep -n -A8 "LIGHTNING\b\|lightning()\|debugQuads()" "$F" | head -60
+          echo "=============== SoundEngine"; F=$(find . -name SoundEngine.java); grep -n "public \|private .*(" "$F"; grep -n -B3 -A70 "public SoundEngine.PlayResult play(\|public void play(" "$F" | head -140
+          echo "=============== SoundManager"; F=$(find . -name SoundManager.java); grep -n "public " "$F"
+          echo "=============== SoundInstance"; cat $(find . -name SoundInstance.java)
+          echo "=============== LevelRenderer"; F=$(find . -name LevelRenderer.java); grep -n "Sky\|sky" "$F" | head -40
+          echo "=============== GameRenderer"; F=$(find . -name GameRenderer.java -path '*client/renderer*'); grep -n -A3 "getDepthFar" "$F" | head
+          echo "=============== Options"; F=$(find . -name Options.java -path '*net/minecraft/client/*'); grep -n "getSoundSourceVolume\|getFinalSoundSourceVolume\|SoundSource" "$F" | head
+          echo "=============== BufferSource"; F=$(find . -name MultiBufferSource.java); grep -n "public " "$F"
+          echo "=============== Minecraft"; F=$(find . -name Minecraft.java -path '*net/minecraft/client/Minecraft.java'); grep -n "public RenderBuffers\|public boolean isPaused\|public SoundManager\|public ResourceManager getResourceManager\|public .* getResourceManager" "$F"
+          echo "=============== Window"; grep -rn "InputConstants.Type\|GLFW_KEY" $(find . -name KeyMapping.java) | head -5
+      - run: ./gradlew build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skybeat
+          path: build/libs/*.jar
