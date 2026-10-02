@@ -18,6 +18,7 @@ public final class Spectrum {
 	private final float[] im = new float[FFT_SIZE];
 	private final float[] raw = new float[BANDS];
 	private final float[] peak = new float[BANDS];
+	private final float[] waveRaw = new float[WAVE_POINTS];
 
 	/** Smoothed band levels in [0, 1]. */
 	public final float[] bands = new float[BANDS];
@@ -64,10 +65,21 @@ public final class Spectrum {
 			fft(re, im);
 			computeBands(track.sampleRate(), gain);
 
+			// Each point averages 8 samples (a gentle low-pass), then neighbours are blended so
+			// the ribbon reads as one smooth line instead of jagged noise.
 			int waveStart = center - WAVE_POINTS * 4;
 			for (int i = 0; i < WAVE_POINTS; i++) {
-				float s = track.sample(waveStart + i * 8);
-				wave[i] = lerp(wave[i], Math.max(-1f, Math.min(1f, s * gain * 1.6f)), 1f - (float) Math.exp(-dt * 30f));
+				float sum = 0f;
+				for (int k = 0; k < 8; k++) {
+					sum += track.sample(waveStart + i * 8 + k);
+				}
+				waveRaw[i] = sum / 8f;
+			}
+			float follow = 1f - (float) Math.exp(-dt * 25f);
+			for (int i = 0; i < WAVE_POINTS; i++) {
+				float a = waveRaw[Math.max(0, i - 1)], b = waveRaw[i], c = waveRaw[Math.min(WAVE_POINTS - 1, i + 1)];
+				float s = (a + 2f * b + c) * 0.25f;
+				wave[i] = lerp(wave[i], Math.max(-1f, Math.min(1f, s * gain * 2.2f)), follow);
 			}
 		} else {
 			java.util.Arrays.fill(raw, 0f);

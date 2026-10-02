@@ -57,14 +57,6 @@ jobs:
             python3 -c "import sys; from PIL import Image; im=Image.open(sys.argv[1]).convert('RGB'); im.thumbnail((960,960)); im.save('/tmp/shot.jpg', quality=72)" "$f"
             echo "SHOT_BEGIN $(basename $f)"; base64 -w0 /tmp/shot.jpg; echo; echo "SHOT_END"
           done
-      - name: Dump main pass
-        if: always()
-        run: |
-          ./gradlew genSources -q
-          JAR=$(find $PWD/.gradle -name 'minecraft-*sources.jar' | head -1)
-          mkdir -p /tmp/src && cd /tmp/src && unzip -q -o "$JAR"
-          F=$(find . -name LevelRenderer.java)
-          grep -n "prepareChunkRenders\|renderGroup\|addMainPass\|private void addMainPass\|framePass.executes\|profilerFiller.push\|popPush" "$F" | head -60
       - uses: actions/upload-artifact@v4
         if: always()
         with:

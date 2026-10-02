@@ -166,21 +166,21 @@ public final class SkyVisualizer {
 			// Mirror the bands so the ring is seamless: bass meets bass, treble meets treble.
 			int band = i < Spectrum.BANDS ? i : BARS - 1 - i;
 			float level = s.bands[band];
-			float h = (1.2f + (float) Math.pow(level, 1.25) * 30f) * punch;
-			float peakH = 1.2f + (float) Math.pow(s.peaks[band], 1.25) * 30f;
+			float h = (1.2f + (float) Math.pow(level, 1.6) * 30f) * punch;
+			float peakH = 1.2f + (float) Math.pow(s.peaks[band], 1.6) * 30f;
 			float phi = spin + TAU * (i + 0.5f) / BARS;
 
 			theme.color(band / (float) Spectrum.BANDS * 0.85f + time * 0.03f, rgb);
 			float r = rgb[0], g = rgb[1], b = rgb[2];
-			float hot = Math.min(1f, level * 1.2f);
+			float hot = Math.max(0f, level - 0.6f) * 2.5f;
 
 			// Wide soft glow behind the bar.
 			tangentQuad(vc, phi, half * 2.4f, R * 1.005f, base, base + h * 1.1f,
-					r, g, b, 0.10f * vis * (0.4f + hot), r, g, b, 0f);
+					r, g, b, 0.08f * vis * (0.5f + level), r, g, b, 0f);
 			// The bar itself, darker at the root and white-hot at the tip when loud.
-			float tr = mix(r, 1f, hot * 0.45f), tg = mix(g, 1f, hot * 0.45f), tb = mix(b, 1f, hot * 0.45f);
+			float tr = mix(r, 1f, hot * 0.3f), tg = mix(g, 1f, hot * 0.3f), tb = mix(b, 1f, hot * 0.3f);
 			tangentQuad(vc, phi, half * 0.78f, R, base, base + h,
-					r * 0.5f, g * 0.5f, b * 0.5f, 0.85f * vis, tr, tg, tb, 0.95f * vis);
+					r * 0.45f, g * 0.45f, b * 0.45f, 0.75f * vis, tr, tg, tb, 0.85f * vis);
 			// Floating peak marker.
 			tangentQuad(vc, phi, half * 0.78f, R, base + peakH + 0.3f, base + peakH + 0.75f,
 					tr, tg, tb, 0.8f * vis, tr, tg, tb, 0.8f * vis);
@@ -195,7 +195,7 @@ public final class SkyVisualizer {
 		int n = Spectrum.WAVE_POINTS;
 		float y = 20f + s.mid * 3f;
 		float rr = R * 0.98f;
-		float amp = 9f;
+		float amp = 7f;
 		float thick = 0.22f + s.treble * 0.25f;
 		float a = vis * (0.35f + s.loudness * 0.65f);
 		for (int i = 0; i < n; i++) {
