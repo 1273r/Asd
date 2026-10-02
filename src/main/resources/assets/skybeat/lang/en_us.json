@@ -1,0 +1,8 @@
+{
+  "key.category.skybeat.main": "Skybeat Visualizer",
+  "key.skybeat.toggle": "Toggle sky visualizer",
+  "key.skybeat.theme": "Next color theme",
+  "key.skybeat.darken": "Toggle sky dimming",
+  "key.skybeat.next_track": "Play next song from music folder",
+  "key.skybeat.stop_track": "Stop song"
+}
