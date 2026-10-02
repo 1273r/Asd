@@ -15,18 +15,31 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - name: Check shaders
-        continue-on-error: true
-        run: |
-          ./gradlew genSources -q
-          JAR=$(find $PWD/.gradle -name 'minecraft-*sources.jar' | head -1)
-          mkdir -p /tmp/src && cd /tmp/src && unzip -q -o "$JAR"
-          grep -n -A6 "DEBUG_FILLED_SNIPPET = " $(find . -name RenderPipelines.java)
-          grep -rn "class MusicManager\|public void stopPlaying\|interface SoundEventListener\|void onPlaySound" net/minecraft/client | head
-          CJ=$(find ~/.gradle $GITHUB_WORKSPACE/.gradle -name 'minecraft-client*.jar' -o -name 'minecraft-merged*.jar' | grep -v sources | head -1); echo $CJ
-          unzip -l "$CJ" | grep "shaders/core/position_color" || echo "no position_color shader in $CJ"
       - run: ./gradlew build
       - uses: actions/upload-artifact@v4
         with:
           name: skybeat
           path: build/libs/*.jar
+
+  client_test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew runProductionClientGametest --stacktrace
+      - name: Screenshots
+        if: always()
+        run: |
+          for f in $(find . -name 'skybeat_*.png' | sort); do
+            convert "$f" -resize 960x -quality 72 /tmp/shot.jpg
+            echo "SHOT_BEGIN $(basename $f)"; base64 -w0 /tmp/shot.jpg; echo; echo "SHOT_END"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: '**/screenshots/*.png'

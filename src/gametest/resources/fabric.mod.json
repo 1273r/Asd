@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "skybeat-gametest",
+  "version": "1.0.0",
+  "name": "Skybeat game test",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": ["dev.skybeat.test.SkybeatGameTest"]
+  },
+  "depends": {
+    "skybeat": "*"
+  }
+}

@@ -53,7 +53,10 @@ public class Skybeat implements ClientModInitializer {
 		t.setPriority(Thread.MIN_PRIORITY);
 		return t;
 	});
+	private static Skybeat instance;
+
 	private final List<GameSoundSource> gameSources = new ArrayList<>();
+	private final List<AudioSource> extraSources = new ArrayList<>();
 	private final Spectrum spectrum = new Spectrum();
 	private final SkyVisualizer visualizer = new SkyVisualizer();
 	private final Path configFile = FabricLoader.getInstance().getConfigDir().resolve("skybeat.properties");
@@ -74,6 +77,7 @@ public class Skybeat implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		instance = this;
 		loadConfig();
 		try {
 			Files.createDirectories(musicDir);
@@ -206,12 +210,24 @@ public class Skybeat implements ClientModInitializer {
 		visualizer.render(spectrum, eased, theme, darken, time, dt);
 	}
 
+	/** Lets other mods (and the game test) feed audio to the visualizer. Call on the client thread. */
+	public static void addSource(AudioSource source) {
+		instance.extraSources.add(source);
+	}
+
 	private AudioSource pickPrimary() {
 		if (filePlayer != null && !filePlayer.finished()) {
 			return filePlayer;
 		}
+		extraSources.removeIf(AudioSource::finished);
 		AudioSource best = null;
 		float bestGain = -1f;
+		for (AudioSource source : extraSources) {
+			if (source.track() != null && source.gain() > bestGain) {
+				best = source;
+				bestGain = source.gain();
+			}
+		}
 		for (GameSoundSource source : gameSources) {
 			if (source.track() == null || source.finished()) {
 				continue;

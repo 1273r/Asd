@@ -45,3 +45,46 @@ jar {
 		rename { "${it}_${inputs.properties.archivesName}" }
 	}
 }
+
+// In-game smoke test: boots a real client, plays a synthetic track through the visualizer
+// and takes screenshots. Run with ./gradlew runProductionClientGametest
+sourceSets {
+	gametest {
+		compileClasspath += main.compileClasspath + main.output
+		runtimeClasspath += main.runtimeClasspath + main.output
+	}
+}
+
+tasks.register('gametestJar', Jar) {
+	from sourceSets.gametest.output
+	destinationDirectory = layout.buildDirectory.dir('devlibs')
+	archiveClassifier = 'gametest'
+}
+
+tasks.register('remapGametestJar', net.fabricmc.loom.task.RemapJarTask) {
+	dependsOn gametestJar
+	input = gametestJar.flatMap { it.archiveFile }
+	destinationDirectory = layout.buildDirectory.dir('gametest-libs')
+	archiveClassifier = 'gametest'
+	addNestedDependencies = false
+	classpath.from(sourceSets.gametest.compileClasspath)
+}
+
+configurations {
+	productionMods {
+		transitive = false
+	}
+}
+
+dependencies {
+	productionMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+tasks.register('runProductionClientGametest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+	dependsOn remapJar, remapGametestJar
+	mods.from(configurations.productionMods)
+	mods.from(remapJar.archiveFile)
+	mods.from(remapGametestJar.flatMap { it.archiveFile })
+	jvmArgs.add('-Dfabric.client.gametest')
+	jvmArgs.add('-Dfabric.client.gametest.disableNetworkSynchronizer=true')
+}
